@@ -1,0 +1,154 @@
+
+China,CHN,CHN,4.11231,0.75649
+United States,USA,USA,4.90866,1.00107
+India,IND,IND,3.40314,0.17021
+Germany,DEU,DEU,4.7386,0.93334
+Japan,JPN,JPN,4.52938,0.65755
+Spain,ESP,ESP,4.52496,0.99628
+Australia,AUS,AUS,4.8133,1.1616
+Mexico,MEX,MEX,4.14179,0.49794
+Brazil,BRA,BRA,4.0161,0.14234
+Chile,CHL,CHL,4.23216,1.25202
+Turkey,TUR,TUR,4.1263,0.56183
+Italy,ITA,ITA,4.59414,0.62018
+United Kingdom,GBR,GBR,4.69849,0.62736
+France,FRA,FRA,4.65031,0.50175
+Viet Nam,VNM,VNM,3.63582,0.3372
+South Africa,ZAF,ZAF,3.78062,0.46396
+Korea,KOR,KOR,4.55235,0.55125
+Ukraine,UKR,UKR,3.71093,0.73355
+United Arab Emirates,ARE,ARE,4.69767,1.20834
+Egypt,EGY,EGY,3.53867,0.10683
+Thailand,THA,,3.85704,0.1016
+Netherlands,NLD,,4.80288,0.62177
+Canada,CAN,,4.73416,0.26754
+Romania,ROU,,4.26113,0.57099
+Hungary,HUN,,4.34695,0.82498
+Argentina,ARG,,4.15418,0.16294
+Denmark,DNK,,4.83279,1.05226
+Czech Republic,CZE,,4.5019,0.77271
+Bulgaria,BGR,,4.20012,0.95299
+Russian Federation,RUS,,4.15104,-0.42725
+Portugal,PRT,,4.44145,0.62424
+Saudi Arabia,SAU,,4.55819,0.16644
+Greece,GRC,,4.36817,0.60423
+Pakistan,PAK,,3.13364,-1.11068
+Philippines,PHL,,3.58025,-0.46223
+Malaysia,MYS,,4.05637,-0.05756
+Israel,ISR,,4.71603,0.55033
+Qatar,QAT,,4.91284,1.09969
+Kazakhstan,KAZ,,4.1099,0.203
+Belgium,BEL,,4.74266,0.24562
+Peru,PER,,3.89694,-0.02934
+Cambodia,KHM,,3.38556,0.26213
+Honduras,HND,,3.50886,0.43512
+Morocco,MAR,,3.58135,-0.15764
+Jordan,JOR,,3.64993,0.26466
+Poland,POL,,4.34528,-0.23382
+Slovakia,SVK,,4.3912,0.61026
+El Salvador,SLV,,3.72961,0.41216
+Algeria,DZA,,3.73001,-0.49606
+Austria,AUT,,4.75266,-0.25942
+Belarus,BLR,,3.89745,0.0836
+Panama,PAN,,4.27409,0.35775
+Switzerland,CHE,,5.0027,-0.59478
+Dominican Republic,DOM,,4.02655,-0.25981
+Moldova,MDA,,3.83248,0.55863
+Mongolia,MNG,,3.76631,0.38669
+Iran,IRN,,3.70323,-1.17407
+Singapore,SGP,,4.93152,
+Lebanon,LBN,,3.5413,
+Kuwait,KWT,,4.53245,0.04181
+Uruguay,URY,,4.36209,0.21883
+Macedonia,MKD,,3.93824,0.39528
+Guatemala,GTM,,3.7603,-0.55775
+Namibia,NAM,,3.62197,0.21696
+Senegal,SEN,,3.22995,-0.538
+Indonesia,IDN,,3.68809,-3.14114
+Laos,LAO,,3.31533,-0.20617
+Costa Rica,CRI,,4.22897,-0.11186
+Cyprus,CYP,,4.56376,0.41598
+Sri Lanka,LKA,,3.57966,-1.10126
+Bolivia,BOL,,3.63091,-0.55735
+Kenya,KEN,,3.28838,-1.34282
+Sweden,SWE,,4.73997,-1.50753
+Slovenia,SVN,,4.51402,-0.18725
+Uzbekistan,UZB,,3.45924,
+Botswana,BWA,,3.89356,0.05094
+Armenia,ARM,,3.91164,-0.12733
+Mauritania,MRT,,3.32956,-0.28408
+Zambia,ZMB,,3.12409,-1.03848
+Lithuania,LTU,,4.44383,-0.41
+Colombia,COL,,3.84515,-1.92134
+Bangladesh,BGD,,3.40671,-2.03418
+Ghana,GHA,,3.37729,-1.42402
+Afghanistan,AFG,,2.61675,-1.46765
+Iraq,IRQ,,3.77563,
+Nigeria,NGA,,3.33016,-4.7561
+Malta,MLT,,4.61178,-0.34605
+Bosnia and Herzegovina,BIH,,3.93767,-0.2877
+Burkina Faso,BFA,,2.94125,-1.27414
+Croatia,HRV,,4.34604,-1.03188
+Albania,ALB,,3.98815,-0.35394
+Estonia,EST,,4.48093,-0.05457
+Tunisia,TUN,,3.59672,-1.28712
+Norway,NOR,,4.94199,-2.0061
+New Zealand,NZL,,4.69087,-2.04235
+New Caledonia,NCL,,4.52765,0.55029
+Azerbaijan,AZE,,3.85327,-1.04663
+Madagascar,MDG,,2.70648,-1.5863
+Myanmar,MMR,,3.09103,-2.57479
+Serbia,SRB,,4.08926,-1.33879
+Uganda,UGA,,3.001,-1.82326
+Paraguay,PRY,,3.79934,
+Ecuador,ECU,,3.82852,-1.60812
+Finland,FIN,,4.72292,-1.46569
+Venezuela,VEN,,3.5584,-3.24906
+Zimbabwe,ZWE,,3.34148,-2.34647
+Ireland,IRL,,5.02865,
+Nicaragua,NIC,,3.41655,-1.22082
+Somalia,SOM,,2.77589,-1.60567
+Rwanda,RWA,,3.01159,-1.51779
+Mali,MLI,,3.01868,-3.15266
+Luxembourg,LUX,,5.1246,-0.39077
+Georgia,GEO,,3.91822,
+Oman,OMN,,4.32279,-1.13463
+Kyrgyzstan,KGZ,,3.33005,
+Niger,NER,,2.80505,-2.32259
+Tanzania,TZA,,3.08778,
+Turkmenistan,TKM,,3.79462,
+Libya,LBY,,3.78007,
+Côte d’Ivoire,CIV,,3.41363,
+Suriname,SUR,,3.74209,-0.61776
+Tajikistan,TJK,,3.07132,
+Angola,AGO,,3.46481,-3.00862
+Ethiopia,ETH,,3.02359,-4.73007
+Congo,COD,,2.81968,
+Latvia,LVA,,4.35622,
+Haiti,HTI,,3.23192,
+Sudan,SDN,,2.90161,-3.05567
+Mozambique,MOZ,,2.79379,-3.17632
+Chad,TCD,,2.97742,
+Benin,BEN,,3.14432,
+Togo,TGO,,3.02326,
+Nepal,NPL,,3.14061,-3.24732
+Montenegro,MNE,,4.08849,
+Cameroon,CMR,,3.23565,
+Swaziland,SWZ,,3.57467,
+Malawi,MWI,,2.80155,-2.87695
+San Marino,SMR,,4.77728,0.38943
+Liberia,LBR,,2.90265,
+Congo,COG,,3.3941,
+Djibouti,DJI,,3.52908,-1.48672
+Lesotho,LSO,,2.96203,
+Belize,BLZ,,3.87068,
+Central African Republic,CAF,,2.69546,
+Sierra Leone,SLE,,2.87986,
+Gabon,GAB,,3.89225,
+Papua New Guinea,PNG,,3.47218,
+Iceland,ISL,,4.91455,
+Brunei,BRN,,4.51707,
+Guinea,GIN,,3.19187,
+Guinea-Bissau,GNB,,2.9948,
+Equatorial Guinea,GNQ,,3.82463,
+Guyana,GUY,,4.3112,
