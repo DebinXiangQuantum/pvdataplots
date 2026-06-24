@@ -23,6 +23,11 @@ DATA_DIR = ROOT / "data"
 WORLD_SHP = DATA_DIR / "map" / "世界国家地图.shp"
 SOLAR_SHP = DATA_DIR / "10km" / "Solar_10km.shp"
 COUNTRY_XLSX = FIG_DIR / "excel" / "lorendata.xlsx"
+GDP_2024_XLSX = FIG_DIR / "data" / "洛伦兹曲线&基尼系数数据.xlsx"
+GDP_2024_SHEET = "洛伦兹曲线"
+GDP_2024_RAW_SHEET = "2024GDP"
+GDP_2024_COL = "2024 GDP (constant 2015 US$)"
+GDP_2024_PC_COL = "2024 GDP per capita (constant 2015 US$)"
 REGION_XLSX = FIG_DIR / "excel" / "barchartFig1.xlsx"
 UTILITY_PER_CAPITA = FIG_DIR / "data" / "percapita_utility.csv"
 DISTRIBUTED_PER_CAPITA = FIG_DIR / "data" / "percapita_distributed.csv"
@@ -330,7 +335,7 @@ def plot_lorenz_panel(
 
     var_name = "Utility-scale PV" if "Utility" in value_col else "Distributed PV"
     ax.plot(cum_pop, cum_vals_pct, color="#4b0082", linewidth=line_width, zorder=5, label=f"{var_name} (Gini={gini_var:.2f})")
-    ax.plot(cum_pop, cum_gdp_pct, color="#ff8c00", linewidth=line_width, linestyle="--", zorder=4, label=f"2023 GDP (Gini={gini_gdp:.2f})")
+    ax.plot(cum_pop, cum_gdp_pct, color="#ff8c00", linewidth=line_width, linestyle="--", zorder=4, label=f"2024 GDP (Gini={gini_gdp:.2f})")
 
     ax.axvline(90, color="#1e90ff", linestyle="--", linewidth=0.4 if compact else 0.5, zorder=6)
     ax.annotate(
@@ -347,7 +352,7 @@ def plot_lorenz_panel(
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
     cbar = fig.colorbar(sm, cax=cax)
-    cbar.set_label("GDP per capita\n(current US$)", fontsize=6, labelpad=0 if compact else 1)
+    cbar.set_label("GDP per capita\n(constant 2015 US$)", fontsize=6, labelpad=0 if compact else 1)
     cbar.ax.tick_params(length=1.5 if compact else 2, pad=0.5 if compact else 1, labelsize=6)
 
     ax.text(34, 40, "Perfect equality", rotation=46, ha="center", va="center", alpha=0.7, fontsize=note_size)
@@ -553,12 +558,46 @@ def plot_country_bar(ax: plt.Axes, country_df: pd.DataFrame) -> None:
     ax.margins(x=0.02)
 
 
+def country_key(values: pd.Series) -> pd.Series:
+    return values.astype(str).str.strip().str.upper()
+
+
+def load_2024_gdp_by_country() -> pd.DataFrame:
+    gdp_df = pd.read_excel(
+        GDP_2024_XLSX,
+        sheet_name=GDP_2024_SHEET,
+        usecols=["地区", GDP_2024_COL, GDP_2024_PC_COL],
+    )
+    gdp_df = gdp_df.rename(columns={"地区": "Country"})
+    gdp_df = gdp_df.dropna(subset=["Country"]).copy()
+    gdp_df[GDP_2024_COL] = pd.to_numeric(gdp_df[GDP_2024_COL], errors="coerce")
+    gdp_df[GDP_2024_PC_COL] = pd.to_numeric(gdp_df[GDP_2024_PC_COL], errors="coerce")
+    gdp_df = gdp_df.dropna(subset=[GDP_2024_COL, GDP_2024_PC_COL]).copy()
+    gdp_df["_country_key"] = country_key(gdp_df["Country"])
+    return gdp_df[["_country_key", GDP_2024_COL, GDP_2024_PC_COL]]
+
+
+def load_2024_gdp_per_capita_by_code() -> pd.Series:
+    gdp_df = pd.read_excel(
+        GDP_2024_XLSX,
+        sheet_name=GDP_2024_RAW_SHEET,
+        usecols=["Country Code", GDP_2024_PC_COL],
+    )
+    gdp_df["Country Code"] = gdp_df["Country Code"].astype(str).str.strip().str.upper()
+    gdp_df[GDP_2024_PC_COL] = pd.to_numeric(gdp_df[GDP_2024_PC_COL], errors="coerce")
+    gdp_df = gdp_df.dropna(subset=[GDP_2024_PC_COL])
+    return gdp_df.set_index("Country Code")[GDP_2024_PC_COL]
+
+
 def load_country_df() -> pd.DataFrame:
     df = pd.read_excel(COUNTRY_XLSX)
     df = df.rename(columns={"地区": "Country"})
     df = df.dropna(subset=["Country"]).copy()
     for col in ["Utility-scale PV GW", "Distributed PV GW"]:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+    df["_country_key"] = country_key(df["Country"])
+    df = df.merge(load_2024_gdp_by_country(), on="_country_key", how="left")
+    df = df.drop(columns=["_country_key"])
     return df
 
 
@@ -571,7 +610,13 @@ def load_per_capita(path: Path) -> pd.DataFrame:
             header=None,
             names=["Country", "Name", "Name2", "GDP Per Capita", "PV Capacity Per Capita"],
         )
-    df["GDP Per Capita"] = pd.to_numeric(df["GDP Per Capita"], errors="coerce")
+    gdp_per_capita = load_2024_gdp_per_capita_by_code()
+    gdp_pc = pd.Series(np.nan, index=df.index, dtype="float64")
+    for code_col in ["Name", "Name2"]:
+        if code_col in df.columns:
+            codes = df[code_col].astype(str).str.strip().str.upper()
+            gdp_pc = gdp_pc.fillna(codes.map(gdp_per_capita))
+    df["GDP Per Capita"] = np.log10(gdp_pc)
     df["PV Capacity Per Capita"] = pd.to_numeric(df["PV Capacity Per Capita"], errors="coerce")
     return df.dropna(subset=["GDP Per Capita", "PV Capacity Per Capita"])
 
@@ -773,7 +818,7 @@ def plot_gdp_quadrant(
         fontsize=6,
         clip_on=False,
     )
-    ax.set_xlabel("GDP per capita (log10 US$)", labelpad=1)
+    ax.set_xlabel("GDP per capita (log10 constant 2015 US$)", labelpad=1)
     ax.set_ylabel("PV Capacity per capita (log10)", labelpad=1)
     ax.spines[["top", "right"]].set_visible(False)
     ax.tick_params(length=2, pad=1)
@@ -824,8 +869,8 @@ def main() -> None:
         ax_lorenz_u,
         country_df,
         "Utility-scale PV GW",
-        "2023 GDP (current US$)",
-        "2023 GDP per capita (current US$) 排序",
+        GDP_2024_COL,
+        GDP_2024_PC_COL,
         compact=True,
     )
     ax_lon_u = fig.add_axes(longitude_aligned_axes_position(fig, ax_map_u, 0.680, 0.045))
@@ -841,8 +886,8 @@ def main() -> None:
         ax_lorenz_d,
         country_df,
         "Distributed PV GW",
-        "2023 GDP (current US$)",
-        "2023 GDP per capita (current US$) 排序",
+        GDP_2024_COL,
+        GDP_2024_PC_COL,
         compact=True,
     )
     ax_lon_d = fig.add_axes(longitude_aligned_axes_position(fig, ax_map_d, 0.310, 0.060))
