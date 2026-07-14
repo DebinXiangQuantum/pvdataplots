@@ -26,7 +26,7 @@ EXPORT_DIR = FIG_DIR / "exported_plots"
 DATA_DIR = ROOT / "data"
 FIG2_DATA_DIR = FIG_DIR / "data"
 
-WORLD_SHP = DATA_DIR / "map" / "世界国家地图.shp"
+WORLD_SHP = DATA_DIR / "国家边界矢量" / "World_countries.shp"
 SOLAR_SHP = DATA_DIR / "10km" / "Solar_10km.shp"
 SOLAR_DISTRIBUTION_XLSX = FIG_DIR / "excel" / "SolarDistributedAll.xlsx"
 GDP_PV_XLSX = FIG_DIR / "excel" / "GDPvsPV.xlsx"
@@ -131,7 +131,13 @@ def mm(value: float) -> float:
     return value / 25.4
 
 
-def add_panel_label(ax: plt.Axes, label: str, x: float = -0.045, y: float = 1.055) -> None:
+def add_panel_label(
+    ax: plt.Axes,
+    label: str,
+    x: float = -0.045,
+    y: float = 1.055,
+    fontsize: float = 8,
+) -> None:
     ax.text(
         x,
         y,
@@ -139,7 +145,7 @@ def add_panel_label(ax: plt.Axes, label: str, x: float = -0.045, y: float = 1.05
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=8,
+        fontsize=fontsize,
         fontweight="bold",
         color=COLORS["text"],
         clip_on=False,
@@ -658,9 +664,13 @@ def load_scatter_data(kind: str) -> pd.DataFrame:
     return df.dropna(subset=["annual_irradiance", "PVCapPerCapita"])
 
 
-def marker_sizes(capacity: pd.Series) -> np.ndarray:
+def marker_sizes(
+    capacity: pd.Series,
+    reference_capacity: pd.Series | np.ndarray | None = None,
+) -> np.ndarray:
     cap = np.sqrt(np.clip(capacity.to_numpy(dtype=float), 0, None))
-    vmax = np.nanpercentile(cap[cap > 0], 98) if np.any(cap > 0) else 1
+    reference = cap if reference_capacity is None else np.sqrt(np.clip(np.asarray(reference_capacity, dtype=float), 0, None))
+    vmax = np.nanpercentile(reference[reference > 0], 98) if np.any(reference > 0) else 1
     vmax = max(vmax, 1e-6)
     return np.interp(np.clip(cap, 0, vmax), [0, vmax], [7, 58])
 

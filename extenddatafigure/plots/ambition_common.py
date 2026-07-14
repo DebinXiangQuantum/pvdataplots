@@ -17,9 +17,11 @@ from extended_data_common import COLORS, FIGURES_DIR, ROOT, display_country, mm,
 
 AMBITION_XLSX = ROOT / "Fig3" / "全球雄心排名.xlsx"
 GDP_XLSX = ROOT / "Fig3" / "GDP&Irradiance&capacity.xlsx"
-WORLD_SHP = ROOT / "data" / "map" / "世界国家地图.shp"
+WORLD_SHP = ROOT / "data" / "国家边界矢量" / "World_countries.shp"
 
-AMBITION_COL = "stage1_true_minus_baseline_pct_of_baseline"
+DEPLOYMENT_DELTA_COL = "stage1_true_minus_baseline_pct_of_baseline"
+DEPLOYMENT_RATE_BASELINE = 100.0
+DEPLOYMENT_RATE_LABEL = "Deployment realization rate (%)"
 FULL_RANKING_SHEET = "installation_ambition_country_r"
 GDP_COL = "2023 GDP (current US$)"
 
@@ -33,11 +35,11 @@ MAP_COLORS = {
     "over": "#D85F8D",
 }
 
-AMBITION_CMAP = mcolors.LinearSegmentedColormap.from_list(
-    "extended_ambition_relative_pct",
+DEPLOYMENT_RATE_CMAP = mcolors.LinearSegmentedColormap.from_list(
+    "extended_deployment_realization_rate",
     [MAP_COLORS["under"], MAP_COLORS["neutral"], MAP_COLORS["over"]],
 )
-AMBITION_NORM = mcolors.TwoSlopeNorm(vmin=-100, vcenter=0, vmax=100)
+DEPLOYMENT_RATE_NORM = mcolors.TwoSlopeNorm(vmin=0, vcenter=DEPLOYMENT_RATE_BASELINE, vmax=200)
 
 
 @dataclass(frozen=True)
@@ -63,23 +65,28 @@ def read_ambition_sheet(sheet_name: str) -> pd.DataFrame:
         warnings.simplefilter("ignore", UserWarning)
         df = pd.read_excel(AMBITION_XLSX, sheet_name=sheet_name)
     df.columns = [str(col).strip() for col in df.columns]
-    missing = [col for col in ["task", "region", "region_type", AMBITION_COL] if col not in df.columns]
+    missing = [col for col in ["task", "region", "region_type", DEPLOYMENT_DELTA_COL] if col not in df.columns]
     if missing:
         raise ValueError(f"Missing required columns in {AMBITION_XLSX.name}/{sheet_name}: {missing}")
     df["country_key"] = df["region"].map(country_key)
-    df["ambition_pct"] = pd.to_numeric(df[AMBITION_COL], errors="coerce")
+    df["deployment_rate"] = DEPLOYMENT_RATE_BASELINE + pd.to_numeric(
+        df[DEPLOYMENT_DELTA_COL], errors="coerce"
+    )
+    # A -100% relative change is zero realization; prevent numerical noise from
+    # producing a negative deployment rate.
+    df["deployment_rate"] = df["deployment_rate"].clip(lower=0)
     return df
 
 
-def load_country_ambition(task_name: str, sheet_name: str | None = None) -> pd.DataFrame:
+def load_country_deployment_rate(task_name: str, sheet_name: str | None = None) -> pd.DataFrame:
     if task_name not in TASKS:
         raise ValueError("task_name must be 'Centralized' or 'Distributed'.")
     sheet = sheet_name or FULL_RANKING_SHEET
     df = read_ambition_sheet(sheet)
     df = df[(df["task"] == task_name) & (df["region_type"] == "COUNTRY")].copy()
-    df = df.dropna(subset=["country_key", "ambition_pct"])
-    df["ambition_pct_clipped"] = df["ambition_pct"].clip(-100, 100)
-    return df[["region", "country_key", "ambition_pct", "ambition_pct_clipped"]].drop_duplicates("country_key")
+    df = df.dropna(subset=["country_key", "deployment_rate"])
+    df["deployment_rate_clipped"] = df["deployment_rate"].clip(0, 200)
+    return df[["region", "country_key", "deployment_rate", "deployment_rate_clipped"]].drop_duplicates("country_key")
 
 
 def load_world() -> gpd.GeoDataFrame:
@@ -90,7 +97,7 @@ def load_world() -> gpd.GeoDataFrame:
     return world.to_crs("ESRI:54030")
 
 
-def load_gdp_top20_ambition(task_name: str) -> pd.DataFrame:
+def load_gdp_top20_deployment_rate(task_name: str) -> pd.DataFrame:
     if task_name not in TASKS:
         raise ValueError("task_name must be 'Centralized' or 'Distributed'.")
     task = TASKS[task_name]
@@ -105,18 +112,22 @@ def load_gdp_top20_ambition(task_name: str) -> pd.DataFrame:
     top20 = gdp.dropna(subset=["gdp"]).sort_values("gdp", ascending=False).head(20).copy()
     top20["gdp_rank"] = np.arange(1, len(top20) + 1)
 
-    primary = load_country_ambition(task_name, task.sheet).rename(columns={"ambition_pct": "primary_ambition_pct"})
-    full = load_country_ambition(task_name, FULL_RANKING_SHEET).rename(columns={"ambition_pct": "full_ambition_pct"})
+    primary = load_country_deployment_rate(task_name, task.sheet).rename(
+        columns={"deployment_rate": "primary_deployment_rate"}
+    )
+    full = load_country_deployment_rate(task_name, FULL_RANKING_SHEET).rename(
+        columns={"deployment_rate": "full_deployment_rate"}
+    )
     merged = top20[["country_key", "gdp", "gdp_rank"]].merge(
-        primary[["country_key", "primary_ambition_pct"]],
+        primary[["country_key", "primary_deployment_rate"]],
         on="country_key",
         how="left",
     )
-    merged = merged.merge(full[["country_key", "full_ambition_pct"]], on="country_key", how="left")
-    merged["ambition_pct"] = merged["primary_ambition_pct"].combine_first(merged["full_ambition_pct"])
-    missing = merged.loc[merged["ambition_pct"].isna(), "country_key"].tolist()
+    merged = merged.merge(full[["country_key", "full_deployment_rate"]], on="country_key", how="left")
+    merged["deployment_rate"] = merged["primary_deployment_rate"].combine_first(merged["full_deployment_rate"])
+    missing = merged.loc[merged["deployment_rate"].isna(), "country_key"].tolist()
     if missing:
-        raise ValueError(f"Missing {task_name} ambition values for GDP top-20 countries: {missing}")
+        raise ValueError(f"Missing {task_name} deployment rates for GDP top-20 countries: {missing}")
     merged["display_country"] = merged["country_key"].map(display_country)
     return merged.sort_values("gdp_rank", ascending=True).reset_index(drop=True)
 
@@ -132,22 +143,20 @@ def save_figure(fig: plt.Figure, basename: str) -> None:
     print(f"Saved {png_path}")
 
 
-def draw_ambition_map(task_name: str, basename: str) -> None:
+def plot_deployment_rate_map(ax: plt.Axes, task_name: str) -> AmbitionTask:
     task = TASKS[task_name]
-    set_style(6)
 
     world = load_world()
-    ambition = load_country_ambition(task_name)
-    merged = world.merge(ambition, on="country_key", how="left")
+    deployment_rate = load_country_deployment_rate(task_name)
+    merged = world.merge(deployment_rate, on="country_key", how="left")
 
-    fig, ax = plt.subplots(figsize=(mm(178), mm(88)))
     ax.set_facecolor(MAP_COLORS["ocean"])
     world.plot(ax=ax, facecolor=MAP_COLORS["land"], edgecolor="none", linewidth=0, rasterized=True, zorder=1)
-    merged.dropna(subset=["ambition_pct_clipped"]).plot(
+    merged.dropna(subset=["deployment_rate_clipped"]).plot(
         ax=ax,
-        column="ambition_pct_clipped",
-        cmap=AMBITION_CMAP,
-        norm=AMBITION_NORM,
+        column="deployment_rate_clipped",
+        cmap=DEPLOYMENT_RATE_CMAP,
+        norm=DEPLOYMENT_RATE_NORM,
         edgecolor="none",
         linewidth=0,
         rasterized=True,
@@ -162,11 +171,31 @@ def draw_ambition_map(task_name: str, basename: str) -> None:
     ax.set_xlim(bounds[0] - pad_x, bounds[2] + pad_x)
     ax.set_ylim(bounds[1] - pad_y, bounds[3] + pad_y)
     ax.set_axis_off()
+    return task
+
+
+def add_deployment_rate_colorbar(fig: plt.Figure, cax: plt.Axes) -> mpl.colorbar.Colorbar:
+    sm = mpl.cm.ScalarMappable(norm=DEPLOYMENT_RATE_NORM, cmap=DEPLOYMENT_RATE_CMAP)
+    sm.set_array([])
+    cb = fig.colorbar(sm, cax=cax, orientation="horizontal", extend="both")
+    cb.set_ticks([0, 50, 100, 150, 200])
+    cb.set_ticklabels(["<=0", "50", "100", "150", ">=200"])
+    cb.set_label(DEPLOYMENT_RATE_LABEL, labelpad=1.8)
+    cb.ax.xaxis.set_label_position("top")
+    cb.outline.set_linewidth(0.35)
+    cb.ax.tick_params(length=1.4, pad=1.0, width=0.35, labelsize=6)
+    return cb
+
+
+def draw_deployment_rate_map(task_name: str, basename: str) -> None:
+    set_style(6)
+    fig, ax = plt.subplots(figsize=(mm(178), mm(88)))
+    task = plot_deployment_rate_map(ax, task_name)
 
     ax.text(
         0.0,
         1.012,
-        f"{task.label} ambition by country",
+        f"{task.label} deployment realization rate by country",
         transform=ax.transAxes,
         ha="left",
         va="bottom",
@@ -175,65 +204,75 @@ def draw_ambition_map(task_name: str, basename: str) -> None:
         color=COLORS["text"],
     )
 
-    sm = mpl.cm.ScalarMappable(norm=AMBITION_NORM, cmap=AMBITION_CMAP)
-    sm.set_array([])
     cax = fig.add_axes([0.295, 0.068, 0.410, 0.018])
-    cb = fig.colorbar(sm, cax=cax, orientation="horizontal", extend="both")
-    cb.set_ticks([-100, -50, 0, 50, 100])
-    cb.set_ticklabels(["<=-100", "-50", "0", "+50", ">=+100"])
-    cb.set_label("Stage-1 ambition relative to baseline (%)", labelpad=1.8)
-    cb.ax.xaxis.set_label_position("top")
-    cb.outline.set_linewidth(0.35)
-    cb.ax.tick_params(length=1.4, pad=1.0, width=0.35, labelsize=6)
+    add_deployment_rate_colorbar(fig, cax)
     fig.subplots_adjust(left=0.015, right=0.985, top=0.935, bottom=0.110)
     save_figure(fig, basename)
 
 
-def draw_gdp_top20_bar(task_name: str, basename: str) -> None:
+def plot_gdp_top20_bar(
+    ax: plt.Axes,
+    task_name: str,
+    *,
+    xlim: tuple[float, float] | None = None,
+    show_ylabels: bool = True,
+    value_label_fontsize: float = 5.8,
+) -> AmbitionTask:
     task = TASKS[task_name]
-    set_style(6)
-    df = load_gdp_top20_ambition(task_name)
+    df = load_gdp_top20_deployment_rate(task_name)
 
-    values = df["ambition_pct"].to_numpy(dtype=float)
+    values = df["deployment_rate"].to_numpy(dtype=float)
     y = np.arange(len(df))
-    colors = [task.color if value >= 0 else mcolors.to_rgba("#6B7F92", 0.95) for value in values]
+    colors = [
+        task.color if value >= DEPLOYMENT_RATE_BASELINE else mcolors.to_rgba("#6B7F92", 0.95)
+        for value in values
+    ]
 
-    fig, ax = plt.subplots(figsize=(mm(178), mm(100)))
     ax.barh(y, values, height=0.62, color=colors, edgecolor="none", zorder=3)
-    ax.axvline(0, color="#303030", linewidth=0.55, zorder=2)
+    ax.axvline(DEPLOYMENT_RATE_BASELINE, color="#303030", linewidth=0.55, zorder=2)
     ax.grid(axis="x", color=COLORS["grid"], linewidth=0.35, zorder=0)
 
     spread = max(float(np.nanmax(values) - np.nanmin(values)), 1.0)
-    label_offset = max(spread * 0.015, 1.1)
+    label_offset = max((xlim[1] - xlim[0]) * 0.008 if xlim else spread * 0.015, 1.1)
     for yi, value in zip(y, values, strict=True):
-        ha = "left" if value >= 0 else "right"
-        x_text = value + label_offset if value >= 0 else value - label_offset
         ax.text(
-            x_text,
+            value + label_offset,
             yi,
-            f"{value:+.1f}",
-            ha=ha,
+            f"{value:.1f}",
+            ha="left",
             va="center",
-            fontsize=5.8,
+            fontsize=value_label_fontsize,
             color=COLORS["text"],
             clip_on=False,
         )
 
     labels = [f"{rank}. {country}" for rank, country in zip(df["gdp_rank"], df["display_country"], strict=True)]
     ax.set_yticks(y)
-    ax.set_yticklabels(labels)
+    if show_ylabels:
+        ax.set_yticklabels(labels)
+    else:
+        ax.set_yticklabels([])
+        ax.tick_params(axis="y", left=False)
     ax.invert_yaxis()
-    ax.set_title(f"GDP top 20 countries - {task.label}", loc="left", fontsize=7, fontweight="bold", pad=2)
-    ax.set_xlabel("Stage-1 ambition relative to baseline (%)", labelpad=1)
-    ax.set_ylabel("GDP rank and country", labelpad=1)
 
-    min_val = float(np.nanmin(values))
-    max_val = float(np.nanmax(values))
-    x_min = min(0, min_val) - max(5.0, spread * 0.10)
-    x_max = max(0, max_val) + max(5.0, spread * 0.16)
-    ax.set_xlim(x_min, x_max)
+    if xlim is None:
+        max_val = float(np.nanmax(values))
+        x_max = max(200.0, max_val + max(5.0, spread * 0.16))
+        ax.set_xlim(0, x_max)
+    else:
+        ax.set_xlim(xlim)
     ax.tick_params(length=2, pad=1)
     ax.spines[["top", "right"]].set_visible(False)
     ax.spines[["left", "bottom"]].set_linewidth(0.5)
+    return task
+
+
+def draw_gdp_top20_bar(task_name: str, basename: str) -> None:
+    set_style(6)
+    fig, ax = plt.subplots(figsize=(mm(178), mm(100)))
+    task = plot_gdp_top20_bar(ax, task_name)
+    ax.set_title(f"GDP top 20 countries - {task.label}", loc="left", fontsize=7, fontweight="bold", pad=2)
+    ax.set_xlabel(DEPLOYMENT_RATE_LABEL, labelpad=1)
+    ax.set_ylabel("GDP rank and country", labelpad=1)
     fig.subplots_adjust(left=0.225, right=0.965, top=0.925, bottom=0.135)
     save_figure(fig, basename)

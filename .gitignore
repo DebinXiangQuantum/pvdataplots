@@ -22,3 +22,10 @@ wheels/
 */*/*.png
 */*/*/*.png
 */*/*/*/*.png
+
+# Large research inputs are distributed from the configured data archive,
+# rather than committed to Git.
+/data/
+/.cache/
+/releases/
+/.data-extract-*/

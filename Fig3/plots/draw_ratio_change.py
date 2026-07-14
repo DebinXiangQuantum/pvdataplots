@@ -64,7 +64,7 @@ def load_data_split(mode='distributed'):
 
 # --- 3. GeoData Loading ---
 print("Loading and projecting shapefile...")
-world_path = "data/map/世界国家地图.shp"
+world_path = "data/国家边界矢量/World_countries.shp"
 world_gdf = gpd.read_file(world_path)
 world_gdf['NAME_UPPER'] = world_gdf['NAME'].str.upper()
 name_mapping = {

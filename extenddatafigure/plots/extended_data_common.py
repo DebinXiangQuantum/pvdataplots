@@ -25,7 +25,7 @@ GDP_PC_CURRENT_COL = "2023 GDP per capita (current US$)"
 
 COLORS = {
     "total": "#4b0082",
-    "total_bar": "#297c78",
+    "total_bar": "#2878b8",
     "utility": "#2878b8",
     "distributed": "#d74b9b",
     "other": "#b7b7b7",

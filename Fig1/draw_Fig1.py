@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIG_DIR = ROOT / "Fig1"
 DATA_DIR = ROOT / "data"
 
-WORLD_SHP = DATA_DIR / "map" / "世界国家地图.shp"
+WORLD_SHP = DATA_DIR / "国家边界矢量" / "World_countries.shp"
 SOLAR_SHP = DATA_DIR / "10km" / "Solar_10km.shp"
 COUNTRY_XLSX = FIG_DIR / "excel" / "lorendata.xlsx"
 GDP_2024_XLSX = FIG_DIR / "data" / "洛伦兹曲线&基尼系数数据.xlsx"
@@ -39,7 +39,7 @@ MAP_CLIP = box(-180, -58, 180, 85)
 
 COLORS = {
     "utility": "#2b7bba",
-    "distributed": "#c95bcf",
+    "distributed": "#d74b9b",
     "utility_light": "#a9d6f5",
     "distributed_light": "#ebb4ec",
     "land": "#f2f2f0",
@@ -855,8 +855,8 @@ def main() -> None:
 
     ax_total = fig.add_axes([0.895, 0.310, 0.085, 0.060])
     ax_country = fig.add_axes([0.060, 0.205, 0.910, 0.065])
-    ax_gdp_u = fig.add_axes([0.060, 0.030, 0.380, 0.125])
-    ax_gdp_d = fig.add_axes([0.570, 0.030, 0.360, 0.125])
+    # ax_gdp_u = fig.add_axes([0.060, 0.030, 0.380, 0.125])
+    # ax_gdp_d = fig.add_axes([0.570, 0.030, 0.360, 0.125])
 
     plot_map(fig, ax_map_u, world, points, "utility")
     ax_lat_u = fig.add_axes(latitude_aligned_axes_position(fig, ax_map_u, 0.895, 0.085, lat_min=-60))
@@ -895,8 +895,9 @@ def main() -> None:
 
     plot_total_panel(ax_total, country_df, compact=True)
     plot_country_bar(ax_country, country_df)
-    plot_gdp_quadrant(ax_gdp_u, utility_pc, country_df, "Utility-scale PV GW", "Utility-scale PV")
-    plot_gdp_quadrant(ax_gdp_d, distributed_pc, country_df, "Distributed PV GW", "Distributed PV")
+
+    # plot_gdp_quadrant(ax_gdp_u, utility_pc, country_df, "Utility-scale PV GW", "Utility-scale PV")
+    # plot_gdp_quadrant(ax_gdp_d, distributed_pc, country_df, "Distributed PV GW", "Distributed PV")
 
     label_y_top = 0.992
     label_y_mid = 0.655
@@ -916,14 +917,16 @@ def main() -> None:
     add_panel_label(fig, "h", label_x_left, label_y_lon_d)
     add_panel_label(fig, "i", 0.865, label_y_total)
     add_panel_label(fig, "j", label_x_left, label_y_country)
-    add_panel_label(fig, "k", label_x_left, label_y_gdp)
-    add_panel_label(fig, "l", 0.515, label_y_gdp)
+    # add_panel_label(fig, "k", label_x_left, label_y_gdp)
+    # add_panel_label(fig, "l", 0.515, label_y_gdp)
 
-    out_pdf = FIG_DIR / "PDFs" / "Fig1_composite_v4.pdf"
-    out_png = FIG_DIR / "Fig1_composite_v4.png"
+    out_pdf = FIG_DIR / "PDFs" / "Fig1_composite.pdf"
+    out_png = FIG_DIR / "Fig1_composite.png"
     out_pdf.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_pdf, dpi=600)
-    fig.savefig(out_png, dpi=300)
+    # 3. 将自定义的 bbox 传给 bbox_inches
+    fig.savefig(out_pdf, dpi=600,)
+    fig.savefig(out_png, dpi=300,)
+
     plt.close(fig)
     print(f"Saved {out_pdf}")
     print(f"Saved {out_png}")

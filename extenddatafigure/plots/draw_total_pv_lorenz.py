@@ -16,10 +16,11 @@ from extended_data_common import (
 )
 
 
-def draw_total_pv_lorenz() -> None:
-    set_style(6)
-    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
-
+def plot_total_pv_lorenz(
+    ax: plt.Axes,
+    fig: plt.Figure,
+    colorbar_ax: plt.Axes | None = None,
+) -> None:
     df = load_total_pv_gdp_data()
     df_var = df.sort_values("total_pv_gw").reset_index(drop=True)
     n = len(df_var)
@@ -30,7 +31,6 @@ def draw_total_pv_lorenz() -> None:
     y_at_90 = np.interp(90, cumulative_region, cumulative_pv)
     y_gap = 100 - y_at_90
 
-    fig, ax = plt.subplots(figsize=(mm(88), mm(70)))
     ax.set_facecolor("white")
 
     ax.fill_between(cumulative_region, cumulative_region, cumulative_pv, color="#c0c0c0", alpha=0.16, zorder=1)
@@ -96,8 +96,7 @@ def draw_total_pv_lorenz() -> None:
     ax.tick_params(length=2, pad=1)
     ax.legend(
         loc="upper left",
-        bbox_to_anchor=(0.0, 1.13),
-        borderaxespad=0,
+        borderaxespad=0.45,
         frameon=False,
         handlelength=1.6,
         labelspacing=0.35,
@@ -106,17 +105,26 @@ def draw_total_pv_lorenz() -> None:
         spine.set_visible(True)
         spine.set_linewidth(0.55)
 
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="4.6%", pad=0.055)
+    if colorbar_ax is None:
+        divider = make_axes_locatable(ax)
+        colorbar_ax = divider.append_axes("right", size="4.6%", pad=0.055)
     sm = plt.cm.ScalarMappable(cmap=GDP_PC_CMAP, norm=norm)
     sm.set_array([])
-    cbar = fig.colorbar(sm, cax=cax)
+    cbar = fig.colorbar(sm, cax=colorbar_ax)
     cbar.outline.set_linewidth(0.35)
     cbar.ax.tick_params(length=1.5, pad=1, width=0.35, labelsize=6)
     cbar.set_label("GDP per capita\n(constant 2015 US$)", fontsize=6, labelpad=1)
 
-    pdf_path = FIGURES_DIR / "extendedFig1.pdf"
-    png_path = FIGURES_DIR / "extendedFig1.png"
+
+def draw_total_pv_lorenz() -> None:
+    set_style(6)
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(mm(88), mm(70)))
+    plot_total_pv_lorenz(ax, fig)
+
+    pdf_path = FIGURES_DIR / "extendedFig1-panelA.pdf"
+    png_path = FIGURES_DIR / "extendedFig1-panelA.png"
     fig.savefig(pdf_path, dpi=600, bbox_inches="tight")
     fig.savefig(png_path, dpi=300, bbox_inches="tight")
     plt.close(fig)

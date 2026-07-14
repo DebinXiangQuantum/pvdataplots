@@ -28,7 +28,7 @@ mpl.rcParams['legend.fontsize'] = 6
 mpl.rcParams['pdf.fonttype'] = 42           # 保证文本可编辑 (非轮廓)
 
 # ================= 2. 核心参数 =================
-world_shp = "data/map/世界国家地图.shp"
+world_shp = "data/国家边界矢量/World_countries.shp"
 solar_shp = r"data/10km/Solar_10km.shp"
 excel_path = r"Fig1/excel/barchartFig1.xlsx"
 # 绘图模式: "分布式" / "集中式" / "总量"

@@ -16,8 +16,8 @@ from extended_data_common import FIGURES_DIR, ROOT, mm, set_style
 
 
 DATA_XLSX = ROOT / "Fig3" / "全球总装机 0518.xlsx"
-WORLD_SHP = ROOT / "data" / "map" / "世界国家地图.shp"
-
+WORLD_SHP = ROOT / "data" / "国家边界矢量" / "World_countries.shp"
+    
 FIG_WIDTH_MM = 180
 FIG_HEIGHT_MM = 138
 
